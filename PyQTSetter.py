@@ -1,65 +1,88 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sat Feb 18 23:40:16 2023
+Created on Thu Jul 27 02:11:24 2023
 
 @author: Ali Sadeghi
 """
 
-import subprocess
-import ctypes
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QMessageBox
+# The app should be run as admin
 
-class DNSChanger(QMainWindow):
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel
+import wmi
+import time
+
+class DNSChangerApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.initUI()
+
+    def initUI(self):
         self.setWindowTitle("DNS Changer")
-        self.setFixedSize(400, 150)
+        self.setGeometry(100, 100, 300, 150)
 
-        label = QLabel(self)
-        label.setText("Click the button to change your DNS servers to 178.22.122.100 and 185.51.200.2.")
-        label.setGeometry(50, 20, 300, 30)
+        self.primary_dns = '178.22.122.100'
+        self.secondary_dns = '185.51.200.2'
+        self.default_dns = ['Obtain DNS server address automatically']
 
-        button = QPushButton(self)
-        button.setText("Change DNS")
-        button.setGeometry(100, 60, 200, 30)
-        button.clicked.connect(self.set_dns)
+        self.status_label = QLabel('Click the button to set custom DNS.')
+        self.current_dns_label = QLabel('Current DNS: ')
+        self.dns_button = QPushButton('Activate')
+        self.dns_button.clicked.connect(self.toggle_dns)
 
-        close_button = QPushButton(self)
-        close_button.setText("Close")
-        close_button.setGeometry(150, 100, 100, 30)
-        close_button.clicked.connect(self.close)
+        layout = QVBoxLayout()
+        layout.addWidget(self.status_label)
+        layout.addWidget(self.current_dns_label)
+        layout.addWidget(self.dns_button)
+        self.setLayout(layout)
 
-    def set_dns(self):
-        try:
-            # Check if the script is running as an administrator
-            if not ctypes.windll.shell32.IsUserAnAdmin():
-                QMessageBox.critical(self, "Error", "Please run this script as an administrator.")
-                return
+        self.update_current_dns_label()
 
-            # Set the DNS servers
-            command = 'netsh interface ip set dns "Ethernet" static 178.22.122.100 primary'
-            subprocess.call(command, shell=True)
-            command = 'netsh interface ip add dns "Ethernet" 185.51.200.2 index=2'
-            subprocess.call(command, shell=True)
+    def toggle_dns(self):
+        if self.dns_button.text() == 'Activate':
+            self.set_custom_dns()
+            self.dns_button.setText('Deactivate')
+            self.status_label.setText(f"Custom DNS set: {self.primary_dns}, {self.secondary_dns}")
+        else:
+            self.reset_dns()
+            self.dns_button.setText('Activate')
+            self.status_label.setText('Click the button to set custom DNS.')
+        self.update_current_dns_label()
 
-            QMessageBox.information(self, "Success", "DNS servers have been changed to 178.22.122.100 and 185.51.200.2.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+    def set_custom_dns(self):
+        c = wmi.WMI()
+        adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
+        for adapter in adapter_configs:
+            if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
+                adapter.SetDNSServerSearchOrder([self.primary_dns, self.secondary_dns])
 
-    def close(self):
-        try:
-            # Reset the DNS servers to their defaults
-            command = 'netsh interface ip set dns "Ethernet" dhcp'
-            subprocess.call(command, shell=True)
+    def reset_dns(self):
+        c = wmi.WMI()
+        adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
+        for adapter in adapter_configs:
+            if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
+                adapter.SetDNSServerSearchOrder([])
 
-            QMessageBox.information(self, "Success", "DNS servers have been reset to their defaults.")
-            self.close()
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+        # Wait for a short duration for DNS settings to take effect
+        time.sleep(2)
+
+    def get_current_dns(self):
+        c = wmi.WMI()
+        adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
+        for adapter in adapter_configs:
+            if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
+                return adapter.DNSServerSearchOrder
+
+    def update_current_dns_label(self):
+        current_dns = self.get_current_dns()
+        if current_dns:
+            self.current_dns_label.setText(f'Current DNS: {", ".join(current_dns)}')
+        else:
+            self.current_dns_label.setText('Current DNS: Obtain DNS server address automatically')
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = DNSChanger()
+    window = DNSChangerApp()
     window.show()
     sys.exit(app.exec_())
