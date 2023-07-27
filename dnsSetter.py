@@ -68,12 +68,11 @@ class DNSChangerApp(QWidget):
         for adapter in adapter_configs:
             if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
                 provider = self.provider_combo.currentText()
-                self.current_provider = provider  # Store the current provider
+                self.current_provider = provider  
                 if provider == 'Shecan':
                     adapter.SetDNSServerSearchOrder([self.primary_dns_shecan, self.secondary_dns_shecan])
                 elif provider == '403':
                     adapter.SetDNSServerSearchOrder([self.primary_dns_403, self.secondary_dns_403])
-                # Store the default DNS values
                 self.default_dns_values = adapter.DNSServerSearchOrder
 
     def reset_dns(self):
@@ -86,16 +85,15 @@ class DNSChangerApp(QWidget):
 
     def provider_changed(self, provider_name):
         if provider_name != 'Select provider':
-            self.dns_button.setEnabled(True)  # Enable the button when a provider is selected
+            self.dns_button.setEnabled(True)
             if self.custom_dns_activated and self.current_provider != provider_name:
-                # Deactivate custom DNS if it's active and provider changed
                 self.reset_dns()
                 self.dns_button.setText('Activate')
                 self.custom_dns_activated = False
                 self.status_label.setText('Click the button to set custom DNS.')
                 self.update_current_dns_label()
         else:
-            self.dns_button.setEnabled(False)  # Disable the button if "Select provider" is selected
+            self.dns_button.setEnabled(False)
 
     def update_current_dns_label(self):
         c = wmi.WMI()
