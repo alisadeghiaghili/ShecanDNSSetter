@@ -63,7 +63,6 @@ class DNSChangerApp(QWidget):
             if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
                 adapter.SetDNSServerSearchOrder([])
 
-        # Wait for a short duration for DNS settings to take effect
         time.sleep(2)
 
     def get_current_dns(self):
