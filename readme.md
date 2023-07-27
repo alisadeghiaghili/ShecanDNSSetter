@@ -31,7 +31,7 @@ To use the DNS Changer application, follow these steps:
 
 Contributions to this project are welcome! If you'd like to make improvements, fix bugs, or add new features, please follow these steps:
 
-1. Fork the repository from [https://github.com/alisadeghiaghili/repository-name](https://github.com/alisadeghiaghili/ShecanDNSSetter).
+1. Fork the repository from [https://github.com/alisadeghiaghili/ShecanDNSSetter](https://github.com/alisadeghiaghili/ShecanDNSSetter).
 2. Create a new branch for your changes.
 3. Make your changes and commit them with descriptive messages.
 4. Push your changes to your forked repository.
@@ -51,6 +51,6 @@ This project is licensed under the [MIT License](LICENSE).
 If you have any questions or suggestions, feel free to contact the author:
 
 **Author:** Ali Sadeghi Aghili  
-**Email:** [ali.sadeghi@example.com](mailto:alisadeghiaghili@gmail.com)
+**Email:** [alisadeghiaghili@gmail.com](mailto:alisadeghiaghili@gmail.com)
 
 We appreciate your contributions to make it even better.
