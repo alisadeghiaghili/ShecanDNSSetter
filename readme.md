@@ -17,9 +17,8 @@ DNS Changer is a PyQt5-based application that allows users to easily toggle betw
 
 To use the DNS Changer application, follow these steps:
 
-1. Ensure you have Python and the required dependencies installed on your system.
-2. Download the executable file from the following link: [Download DNS Changer Executable](https://1drv.ms/u/s!AnH4b9D3BGzohPtazA70_0jPpqOBbA?e=2jyX1r)
-3. Run the application as an administrator.
+1. Download the executable file from the following link: [Download DNS Changer Executable](https://1drv.ms/u/s!AnH4b9D3BGzohPtazA70_0jPpqOBbA?e=2jyX1r)
+2. Run the application as an administrator.
 
 ## Features
 
@@ -40,7 +39,7 @@ Contributions to this project are welcome! If you'd like to make improvements, f
 
 ## Note
 
-- The application requires administrative privileges to set custom DNS settings. Please run it as an administrator.
+- The application requires administrative privileges to set custom DNS settings. **Please run it as an administrator.**
 - The default DNS values are set to "Obtain DNS server address automatically."
 
 ## License
