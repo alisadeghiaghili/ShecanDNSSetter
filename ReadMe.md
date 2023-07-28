@@ -1,4 +1,4 @@
-# DNS Changer - README
+# DNS Changer
 
 ## Description
 
