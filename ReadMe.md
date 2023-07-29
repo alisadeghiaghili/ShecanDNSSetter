@@ -17,7 +17,7 @@ DNS Changer is a PyQt5-based application that allows users to easily toggle betw
 
 To use the DNS Changer application, follow these steps:
 
-1. Download the executable file from the following link: [Download DNS Changer Executable](https://1drv.ms/u/s!AnH4b9D3BGzohPtazA70_0jPpqOBbA?e=2jyX1r)
+1. Download the executable file from the following link: [Download DNS Changer Executable](https://bit.ly/dnsSetter)
 2. Run the application as an administrator.
 
 ## Features
