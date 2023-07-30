@@ -98,13 +98,24 @@ class DNSChangerApp(QWidget):
     def update_current_dns_label(self):
         c = wmi.WMI()
         adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
+    
+        dns_servers = []
         for adapter in adapter_configs:
             if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
                 dns_servers = adapter.DNSServerSearchOrder
-                if dns_servers == self.default_dns:
-                    self.current_dns_label.setText('Current DNS: Default')
-                else:
-                    self.current_dns_label.setText(f'Current DNS: {", ".join(dns_servers)}')
+                if isinstance(dns_servers, list):
+                    dns_servers = [dns for dns in dns_servers if dns is not None]
+                    break
+    
+        if not dns_servers:
+            self.current_dns_label.setText('Current DNS: Unavailable')
+        elif dns_servers == self.default_dns:
+            self.current_dns_label.setText('Current DNS: Default')
+        else:
+            self.current_dns_label.setText(f'Current DNS: {", ".join(dns_servers)}')
+
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
