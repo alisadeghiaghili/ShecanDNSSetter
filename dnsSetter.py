@@ -1,123 +1,197 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jul 27 19:37:41 2023
-
+DNS Changer Application
 @author: Ali Sadeghi
 """
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox
+import ctypes
 import wmi
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QLabel, QComboBox, QMessageBox
+)
+
+
+DNS_PROVIDERS = {
+    'Shecan': ('178.22.122.100', '185.51.200.2'),
+    '403':    ('10.202.10.202',  '10.202.10.102'),
+}
+
+
+def is_admin() -> bool:
+    try:
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return False
+
+
+def get_active_adapters():
+    """Return all IP-enabled adapters that are Wireless or Ethernet."""
+    c = wmi.WMI()
+    return [
+        a for a in c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
+        if a.Description and (
+            "Wireless" in a.Description or "Ethernet" in a.Description
+        )
+    ]
+
+
+def read_current_dns() -> list[str]:
+    """Read DNS servers from the first matching active adapter."""
+    for adapter in get_active_adapters():
+        servers = adapter.DNSServerSearchOrder
+        if servers:
+            return [s for s in servers if s]
+    return []
+
 
 class DNSChangerApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
-        self.custom_dns_activated = False
-        self.current_provider = None
-        self.default_dns_values = None
+        # DNS قبل از هر تغییری ذخیره می‌شه
+        self._original_dns: list[str] | None = None
+        self._custom_active = False
+        self._initUI()
 
-    def initUI(self):
+    # ------------------------------------------------------------------ UI --
+
+    def _initUI(self):
         self.setWindowTitle("DNS Changer")
-        self.setGeometry(100, 100, 300, 200)
+        self.setFixedSize(340, 180)
 
-        self.primary_dns_shecan = '178.22.122.100'
-        self.secondary_dns_shecan = '185.51.200.2'
-        self.primary_dns_403 = '10.202.10.202'
-        self.secondary_dns_403 = '10.202.10.102'
-        self.default_dns = ['Obtain DNS server address automatically']
-
-        self.status_label = QLabel('Click the button to set custom DNS.')
-        self.current_dns_label = QLabel('Current DNS: ')
-        self.dns_button = QPushButton('Activate')
-        self.dns_button.setEnabled(False)  # Initially disabled
-        self.dns_button.clicked.connect(self.toggle_dns)
+        self.status_label      = QLabel('یک provider انتخاب کنید.')
+        self.current_dns_label = QLabel()
 
         self.provider_combo = QComboBox()
-        self.provider_combo.addItems(['Select provider', 'Shecan', '403'])
-        self.provider_combo.activated[str].connect(self.provider_changed)
+        self.provider_combo.addItem('انتخاب provider')
+        self.provider_combo.addItems(DNS_PROVIDERS.keys())
+        self.provider_combo.currentTextChanged.connect(self._on_provider_changed)
+
+        self.toggle_btn = QPushButton('Activate')
+        self.toggle_btn.setEnabled(False)
+        self.toggle_btn.clicked.connect(self._toggle_dns)
 
         layout = QVBoxLayout()
         layout.addWidget(self.status_label)
         layout.addWidget(self.current_dns_label)
         layout.addWidget(self.provider_combo)
 
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(self.dns_button)
-        layout.addLayout(button_layout)
+        btn_row = QHBoxLayout()
+        btn_row.addStretch()
+        btn_row.addWidget(self.toggle_btn)
+        layout.addLayout(btn_row)
 
         self.setLayout(layout)
+        self._refresh_dns_label()
 
-        self.update_current_dns_label()
+    # ----------------------------------------------------------- Slots ------
 
-    def toggle_dns(self):
-        if not self.custom_dns_activated:
-            self.set_custom_dns()
-            self.dns_button.setText('Deactivate')
-            self.status_label.setText(f"Custom DNS set.")
+    def _on_provider_changed(self, text: str):
+        """اگه DNS فعاله و provider عوض شد، اول reset کن."""
+        if text == 'انتخاب provider':
+            self.toggle_btn.setEnabled(False)
+            return
+
+        self.toggle_btn.setEnabled(True)
+
+        if self._custom_active:
+            self._do_reset()
+            self.toggle_btn.setText('Activate')
+            self.status_label.setText('Provider تغییر کرد — دوباره Activate کنید.')
+
+    def _toggle_dns(self):
+        if self._custom_active:
+            self._do_reset()
+            self.toggle_btn.setText('Activate')
+            self.status_label.setText('DNS به حالت اولیه برگشت.')
         else:
-            self.reset_dns()
-            self.dns_button.setText('Activate')
-            self.status_label.setText('Click the button to set custom DNS.')
-        self.custom_dns_activated = not self.custom_dns_activated
-        self.update_current_dns_label()
+            self._do_activate()
 
-    def set_custom_dns(self):
-        c = wmi.WMI()
-        adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
-        for adapter in adapter_configs:
-            if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
-                provider = self.provider_combo.currentText()
-                self.current_provider = provider  
-                if provider == 'Shecan':
-                    adapter.SetDNSServerSearchOrder([self.primary_dns_shecan, self.secondary_dns_shecan])
-                elif provider == '403':
-                    adapter.SetDNSServerSearchOrder([self.primary_dns_403, self.secondary_dns_403])
-                self.default_dns_values = adapter.DNSServerSearchOrder
+        self._refresh_dns_label()
 
-    def reset_dns(self):
-        if self.default_dns_values is not None:
-            c = wmi.WMI()
-            adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
-            for adapter in adapter_configs:
-                if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
-                    adapter.SetDNSServerSearchOrder(self.default_dns_values)
+    # -------------------------------------------------- Core logic ----------
 
-    def provider_changed(self, provider_name):
-        if provider_name != 'Select provider':
-            self.dns_button.setEnabled(True)
-            if self.custom_dns_activated and self.current_provider != provider_name:
-                self.reset_dns()
-                self.dns_button.setText('Activate')
-                self.custom_dns_activated = False
-                self.status_label.setText('Click the button to set custom DNS.')
-                self.update_current_dns_label()
+    def _do_activate(self):
+        provider = self.provider_combo.currentText()
+        if provider not in DNS_PROVIDERS:
+            return
+
+        primary, secondary = DNS_PROVIDERS[provider]
+
+        try:
+            # ذخیره DNS فعلی قبل از تغییر
+            self._original_dns = read_current_dns() or None
+
+            adapters = get_active_adapters()
+            if not adapters:
+                self._warn("هیچ adapter فعالی پیدا نشد.")
+                return
+
+            failed = False
+            for adapter in adapters:
+                result = adapter.SetDNSServerSearchOrder([primary, secondary])
+                # WMI یه tuple برمی‌گردونه؛ عنصر اول return code هست
+                ret_code = result[0] if isinstance(result, (list, tuple)) else result
+                if ret_code != 0:
+                    failed = True
+
+            if failed:
+                self._warn(
+                    "تغییر DNS با خطا مواجه شد.\n"
+                    "مطمئن شوید برنامه با دسترسی Administrator اجرا شده."
+                )
+                self._original_dns = None
+                return
+
+            self._custom_active = True
+            self.toggle_btn.setText('Deactivate')
+            self.status_label.setText(f"DNS روی {provider} تنظیم شد.")
+
+        except Exception as e:
+            self._warn(f"خطا در تنظیم DNS:\n{e}")
+
+    def _do_reset(self):
+        try:
+            adapters = get_active_adapters()
+            for adapter in adapters:
+                # پاس دادن None یا لیست خالی → DHCP automatic
+                adapter.SetDNSServerSearchOrder(self._original_dns or [])
+        except Exception as e:
+            self._warn(f"خطا در بازگردانی DNS:\n{e}")
+        finally:
+            self._custom_active = False
+            self._original_dns = None
+
+    # --------------------------------------------------------- Helpers ------
+
+    def _refresh_dns_label(self):
+        servers = read_current_dns()
+        if not servers:
+            text = 'Current DNS: Automatic (DHCP)'
         else:
-            self.dns_button.setEnabled(False)
+            text = 'Current DNS: ' + ', '.join(servers)
+        self.current_dns_label.setText(text)
 
-    def update_current_dns_label(self):
-        c = wmi.WMI()
-        adapter_configs = c.Win32_NetworkAdapterConfiguration(IPEnabled=True)
-    
-        dns_servers = []
-        for adapter in adapter_configs:
-            if "Wireless" in adapter.Description or "Ethernet" in adapter.Description:
-                dns_servers = adapter.DNSServerSearchOrder
-                if isinstance(dns_servers, list):
-                    dns_servers = [dns for dns in dns_servers if dns is not None]
-                    break
-    
-        if not dns_servers:
-            self.current_dns_label.setText('Current DNS: Unavailable')
-        elif dns_servers == self.default_dns:
-            self.current_dns_label.setText('Current DNS: Default')
-        else:
-            self.current_dns_label.setText(f'Current DNS: {", ".join(dns_servers)}')
+    @staticmethod
+    def _warn(msg: str):
+        box = QMessageBox()
+        box.setIcon(QMessageBox.Warning)
+        box.setWindowTitle("هشدار")
+        box.setText(msg)
+        box.exec_()
 
 
-
+# ----------------------------------------------------------------------- main
 
 if __name__ == '__main__':
+    if not is_admin():
+        # خود برنامه رو با UAC elevation دوباره اجرا می‌کنه
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, " ".join(sys.argv), None, 1
+        )
+        sys.exit(0)
+
     app = QApplication(sys.argv)
     window = DNSChangerApp()
     window.show()
