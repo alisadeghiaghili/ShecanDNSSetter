@@ -1,0 +1,24 @@
+# MANIFEST.in
+# Controls which non-Python files are included in `python -m build` source distributions.
+
+# ── documentation ───────────────────────────────────────────────────────────
+include README.md
+include CHANGELOG.md
+include LICENSE
+
+# ── package data ────────────────────────────────────────────────────────────
+recursive-include dns_changer *.py
+
+# ── explicitly exclude build/dev artefacts ──────────────────────────────────
+exclude .env
+exclude .env.*
+prune  .git
+prune  .github
+prune  __pycache__
+prune  *.egg-info
+prune  dist
+prune  build
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .DS_Store
+global-exclude Thumbs.db

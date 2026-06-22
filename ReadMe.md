@@ -1,56 +1,135 @@
-# DNS Changer
+<div dir="rtl">
 
-## Description
+# 🌐 DNS Changer
 
-This repository contains a Python application called DNS Changer, developed by Ali Sadeghi Aghili. The application provides a simple graphical user interface (GUI) to change DNS settings on your computer.
+> ابزار مدیریت DNS برای کاربران ایرانی — رابط گرافیکی و خط فرمان، ساخته‌شده با Python
 
-## About the Author
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue)](https://www.python.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)](https://www.microsoft.com/windows)
 
-**Name:** Ali Sadeghi Aghili  
-**GitHub:** [https://github.com/alisadeghiaghili](https://github.com/alisadeghiaghili)
+---
 
-## Overview
+[English README](README.en.md)
 
-DNS Changer is a PyQt5-based application that allows users to easily toggle between custom and default DNS settings. It provides two pre-configured DNS providers (Shecan and 403) and the option to revert to the default settings.
+---
 
-## Usage
+## درباره توسعه‌دهنده
 
-To use the DNS Changer application, follow these steps:
+**نام:** علی صادقی آقیلی
+**گیت‌هاب:** [github.com/alisadeghiaghili](https://github.com/alisadeghiaghili)
+**ایمیل:** [alisadeghiaghili@gmail.com](mailto:alisadeghiaghili@gmail.com)
 
-1. Download the executable file from the following link: [Download DNS Changer Executable](https://github.com/alisadeghiaghili/ShecanDNSSetter/releases/download/pre-release/dnsSetter.exe)
-2. Run the application as an administrator.
+---
 
-## Features
+## معرفی
 
-- Toggle between custom and default DNS settings.
-- Choose between two pre-configured DNS providers (Shecan and 403).
-- Easily switch back to the default DNS settings.
-- The application runs with a user-friendly graphical interface.
+DNS Changer یک ابزار ویندوزی است که با یک کلیک یا یک دستور، DNS سیستم شما را تغییر می‌دهد.
+این برنامه ۱۰ سرویس‌دهنده DNS را در چهار دسته پشتیبانی می‌کند و هم رابط گرافیکی PyQt5 و هم CLI تعاملی مبتنی بر Rich دارد.
 
-## How to Contribute
+---
 
-Contributions to this project are welcome! If you'd like to make improvements, fix bugs, or add new features, please follow these steps:
+## ویژگی‌ها
 
-1. Fork the repository from [https://github.com/alisadeghiaghili/ShecanDNSSetter](https://github.com/alisadeghiaghili/ShecanDNSSetter).
-2. Create a new branch for your changes.
-3. Make your changes and commit them with descriptive messages.
-4. Push your changes to your forked repository.
-5. Submit a pull request to the original repository.
+- **۱۰ سرویس‌دهنده DNS** در چهار دسته آماده
+- **رابط گرافیکی** — PyQt5 با منوی دسته‌بندی‌شده و توضیح هر سرویس‌دهنده
+- **خط فرمان (CLI)** — منوی تعاملی TUI و دستورات مستقیم برای اسکریپت‌نویسی
+- **اسنپ‌شات خودکار DNS** قبل از هر تغییر — بازگشت ایمن به DHCP
+- **UAC Elevation** — راه‌اندازی مجدد خودکار با دسترسی Administrator
+- بررسی کد بازگشتی WMI — نمایش خطای واقعی به جای شکست بی‌صدا
+- معماری لایه‌ای (core / ui / cli / utils) — هر لایه مستقل و قابل تست
 
-## Note
+---
 
-- The application requires administrative privileges to set custom DNS settings. **Please run it as an administrator.**
-- The default DNS values are set to "Obtain DNS server address automatically."
+## سرویس‌دهنده‌های DNS
 
-## License
+| سرویس‌دهنده | دسته        | Primary          | Secondary         |
+|-------------|-------------|------------------|-------------------|
+| Shecan      | رفع تحریم   | 178.22.122.100   | 185.51.200.2      |
+| Begzar      | رفع تحریم   | 185.55.226.26    | 185.55.225.25     |
+| Electro     | رفع تحریم   | 78.157.42.100    | 78.157.42.101     |
+| HostIran    | رفع تحریم   | 172.29.0.100     | 172.29.2.100      |
+| 403         | رفع فیلتر   | 10.202.10.202    | 10.202.10.102     |
+| Radar Game  | گیمینگ      | 10.202.10.10     | 10.202.10.11      |
+| AsiaTech    | گیمینگ      | 185.98.113.113   | 185.98.114.114    |
+| Cloudflare  | عمومی       | 1.1.1.1          | 1.0.0.1           |
+| Google      | عمومی       | 8.8.8.8          | 8.8.4.4           |
+| Quad9       | عمومی       | 9.9.9.9          | 149.112.112.112   |
 
-This project is licensed under the [MIT License](LICENSE).
+---
 
-## Contact
+## پیش‌نیازها
 
-If you have any questions or suggestions, feel free to contact the author:
+- ویندوز ۱۰ یا ۱۱
+- Python نسخه ۳.۱۱ به بالا
+- دسترسی Administrator
 
-**Author:** Ali Sadeghi Aghili  
-**Email:** [alisadeghiaghili@gmail.com](mailto:alisadeghiaghili@gmail.com)
+```bash
+pip install PyQt5 rich
+```
 
-We appreciate your contributions to make it even better.
+---
+
+## نحوه استفاده
+
+### رابط گرافیکی (GUI)
+
+```bash
+python -m dns_changer.main
+```
+
+یا فایل اجرایی آماده را دانلود کنید:
+[دانلود DNS Changer (exe)](https://github.com/alisadeghiaghili/ShecanDNSSetter/releases/download/pre-release/dnsSetter.exe)
+
+> **حتماً به عنوان Administrator اجرا کنید.**
+
+### خط فرمان (CLI)
+
+```bash
+# منوی تعاملی
+python -m dns_changer.cli.dns_cli
+
+# دستورات مستقیم
+python -m dns_changer.cli.dns_cli list              # نمایش همه سرویس‌دهنده‌ها
+python -m dns_changer.cli.dns_cli status            # وضعیت DNS فعلی
+python -m dns_changer.cli.dns_cli set Shecan        # فعال‌کردن یک سرویس‌دهنده
+python -m dns_changer.cli.dns_cli reset             # بازگشت به DHCP
+```
+
+---
+
+## ساختار پروژه
+
+```
+dns_changer/
+├── main.py                  # نقطه ورود GUI
+├── core/
+│   ├── providers.py         # تعریف سرویس‌دهنده‌ها
+│   ├── adapter.py           # تنها فایلی که با WMI کار می‌کند
+│   └── dns_service.py       # منطق اصلی + state machine
+├── ui/
+│   └── main_window.py       # رابط PyQt5
+├── cli/
+│   └── dns_cli.py           # CLI تعاملی و مستقیم
+└── utils/
+    └── privileges.py        # مدیریت دسترسی Administrator
+```
+
+---
+
+## مشارکت در توسعه
+
+۱. ریپازیتوری را Fork کنید: [github.com/alisadeghiaghili/ShecanDNSSetter](https://github.com/alisadeghiaghili/ShecanDNSSetter)
+۲. یک branch جدید برای تغییرات خود بسازید
+۳. با پیام‌های توصیفی طبق [Conventional Commits](https://www.conventionalcommits.org/) commit کنید
+۴. Pull Request ارسال کنید
+
+برای اضافه‌کردن سرویس‌دهنده جدید فقط یک خط به `core/providers.py` اضافه کنید — هیچ فایل دیگری نیاز به تغییر ندارد.
+
+---
+
+## لایسنس
+
+این پروژه تحت مجوز [Apache License 2.0](LICENSE) منتشر شده است.
+
+</div>
